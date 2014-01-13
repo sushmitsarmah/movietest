@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <form id="movie_search">
+	    <label for="query">Search for Movies</label>
+	    <input type="search" name="query" id="query"/>
+	    <button type="submit">Search</button>
+    </form>
+    <button id="upcoming">See Upcoming Movies</button>
+    <div id="movies"></div>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript">
+    var local_data =<%- JSON.stringify(json) %>;
+    local_data = JSON.parse(local_data);
+
+    function displayMovies(data){
+	    var image_path="http://image.tmdb.org/t/p/w780";
+	    var full_html = [];
+	    data.results.forEach(function(result){
+
+	    	var temp = result.poster_path || result.backdrop_path;
+	    	var image;
+	    	if(temp)
+	    		image = "<img src='"+image_path+temp+"'/></div>";
+	    	else
+	    		image = "<p>No Image Available</p></div>";
+	    	var html = ["<div class='movie'><h3>"+result.original_title+"</h3>",
+	    				"<h4>Release Date: "+result.release_date+"</h4>",
+	    				"<h5>Popularity: "+(result.popularity*100).toFixed(2)+"%</h5>",
+	    				image].join("\n");
+	    	full_html.push(html);
+	    });
+	    return full_html;
+	}
+
+
+    $("#upcoming").on("click",function(event){
+    	$("#movies").children().remove();
+	 	full_html = displayMovies(local_data);
+	    $("#movies").append(full_html.join("\n"));   	
+    });
+
+
+    $("#movie_search").on("submit",function(event){
+    	event.preventDefault();
+    	$("#movies").children().remove();
+    	query = $(this).serializeArray()[0].value;
+    	$.ajax({
+    		url:"/search/"+query,
+    		dataType:"json",
+    	}).done(function(data){
+			full_html = displayMovies(data);
+			$("#movies").append(full_html.join("\n"));    		
+    	});
+    });
+
+    </script>
+  </body>
+</html>
